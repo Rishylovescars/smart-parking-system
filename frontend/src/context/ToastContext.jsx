@@ -1,0 +1,38 @@
+import React, { createContext, useContext, useState, useCallback } from 'react';
+
+const ToastContext = createContext(null);
+
+export const ToastProvider = ({ children }) => {
+  const [toasts, setToasts] = useState([]);
+
+  const addToast = useCallback((message, type = 'success') => {
+    const id = Date.now() + Math.random().toString();
+    setToasts((prev) => [...prev, { id, message, type }]);
+
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 3000);
+  }, []);
+
+  return (
+    <ToastContext.Provider value={{ addToast }}>
+      {children}
+      <div className="toast-container" id="toast-container">
+        {toasts.map((t) => (
+          <div key={t.id} className={`toast toast-${t.type}`}>
+            <span>{t.type === 'success' ? '✅' : '❌'}</span>
+            <span>{t.message}</span>
+          </div>
+        ))}
+      </div>
+    </ToastContext.Provider>
+  );
+};
+
+export const useToast = () => {
+  const context = useContext(ToastContext);
+  if (!context) {
+    return { addToast: (msg) => console.log(msg) };
+  }
+  return context;
+};
