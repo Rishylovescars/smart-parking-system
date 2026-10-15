@@ -107,6 +107,11 @@ smart-parking-system/
 │   ├── src/main/resources/
 │   │   ├── application.properties
 │   │   └── data.sql                   # Sample data (10 parking spaces)
+│   │   
+│   ├── .env.example
+│   │ 
+│   ├── .gitignore
+│   │  
 │   └── pom.xml
 │
 └── README.md
@@ -143,6 +148,36 @@ smart-parking-system/
 
 ---
 
+## 🔐 Git Ignore & Environment Configuration
+
+The repository uses a Java `.gitignore` template and additional rules to keep local environment files, generated build output, and IDE-specific settings out of version control.
+
+Recommended rules in `backend/.gitignore` (or the repository's root `.gitignore`):
+
+```gitignore
+# Local environment files and secrets
+.env
+.env.*
+!.env.example
+
+# Maven build output
+target/
+
+# IDE settings
+.idea/
+.vscode/
+```
+
+The `.env.example` file documents the required environment variables with placeholder values. Copy its contents into a local `.env` file and replace the placeholders with your own configuration.
+
+**Security checklist**
+- Never commit `.env` or real database credentials.
+- Commit `.env.example` with placeholders only.
+- Check that `.env` is ignored before staging files (`git check-ignore -v backend/.env`).
+- `.gitignore` does not untrack a file that was already committed. If credentials were exposed, rotate the password and remove the secret from the repository history as appropriate.
+
+---
+
 ## 🚀 How to Run
 
 ### Prerequisites
@@ -162,19 +197,32 @@ CREATE DATABASE parking_db;
 
 ### Step 2: Configure Database Credentials
 
-Open `backend/src/main/resources/application.properties` and update the MySQL credentials:
+The backend reads database configuration from a local `.env` file. This keeps real credentials out of the source code.
+
+1. In the `backend/` directory, create a file named `.env`.
+2. Add your local MySQL connection details:
 
 ```properties
-spring.datasource.username=root
-spring.datasource.password=your_mysql_password
+DB_URL=jdbc:mysql://localhost:3306/parking_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+DB_USERNAME=root
+DB_PASSWORD=your_actual_mysql_password
 ```
 
-Or set environment variables:
+3. Replace `your_actual_mysql_password` with your local MySQL password.
+4. Keep the `.env` file private. It should be ignored by Git and must never be committed.
+5. Use `backend/.env.example` as a template when setting up the project on another machine. It should contain placeholders only, never real credentials.
 
-```bash
-set MYSQL_USERNAME=root
-set MYSQL_PASSWORD=your_mysql_password
+The backend's `application.properties` should import the `.env` file and use these placeholders:
+
+```properties
+spring.config.import=optional:file:.env[.properties]
+
+spring.datasource.url=${DB_URL}
+spring.datasource.username=${DB_USERNAME}
+spring.datasource.password=${DB_PASSWORD}
 ```
+
+Run the backend from the `backend/` directory so the relative `.env` path resolves correctly. If your configuration differs, follow the variable names and import settings in your `application.properties`.
 
 ### Step 3: Run the Backend
 
@@ -317,21 +365,6 @@ The application comes pre-loaded with 10 parking spaces:
 
 ---
 
-## 🎓 For College Viva
-
-Key topics you should be prepared to explain:
-
-1. **MVC Architecture** — How Spring Boot separates Controller, Service, and Repository layers
-2. **JPA/Hibernate** — How entity classes map to database tables
-3. **REST APIs** — How the frontend communicates with the backend using HTTP methods
-4. **React Components** — How UI is built using reusable components
-5. **React Router** — How client-side routing works
-6. **State Management** — How React useState and useEffect hooks work
-7. **CORS** — Why cross-origin configuration is needed
-8. **Reservation Validation** — How the backend validates overlapping reservations
-9. **Foreign Keys** — The relationship between parking_spaces and reservations tables
-
----
 
 ## 📝 License
 
